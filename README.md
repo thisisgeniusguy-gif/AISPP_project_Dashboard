@@ -149,15 +149,39 @@ construction).
 - **What-if levers**: the hour impact of switching service tier, cutting warehouse dwell time
   by an hour, sourcing from a warehouse 100 km closer, or relieving courier load.
 
-### Screenshots
+### Working application
 
-Include these in the submission (replace the paths after capturing them):
+The screenshots below are from a live run of `app.py` (Standard shipping, Apparel, ₹2,700
+order, 250 km lane, 8 h warehouse dwell, courier load 6/10, traffic 6/10).
 
-| View | File |
-|---|---|
-| Prediction result with promise window | `screenshots/01_prediction.png` |
-| Driver attribution chart and what-if levers | `screenshots/02_drivers.png` |
-| Validation blocking an invalid input | `screenshots/03_validation.png` |
+**1. Prediction result with promise window**
+![Prediction result](screenshots/01_prediction.png)
+The app returns a point estimate of **25.6 hours** with a **23.0–28.2 hour** promise window
+and an absolute ETA, alongside the headline test-set metrics (R² 0.968, MAE 1.23 h).
+It also converts the estimate into a **29-hour customer-facing promise** (the upper bound,
+not the point estimate), so the team never quotes a number it beats only half the time.
+
+**2. Driver attribution chart**
+![Driver attribution](screenshots/02_drivers.png)
+A waterfall-style bar chart and table decompose the 25.6-hour prediction into each feature's
+contribution relative to an average Express/Apparel order — Standard service (+5.0 h) and
+warehouse processing (+4.72 h) dominate, while distance actually saves time for this order.
+The bars plus the model baseline reproduce the prediction exactly, so the attribution is
+audit-able rather than a black box.
+
+**3. Plain-language read for the operations manager**
+![Manager read-out](screenshots/03_read_for_manager.png)
+Below the chart, the same numbers are restated as bullet-point business language and split
+into **structural** levers (distance, network design) versus **controllable** ones
+(warehouse dwell time), so a non-technical manager can act on the model without reading
+coefficients. It closes by confirming order value has no meaningful effect on speed.
+
+**4. What-if levers table**
+![What-if levers](screenshots/04_whatif_levers.png)
+A what-if table quantifies the hours saved by five concrete interventions — e.g. switching
+to Same-Day (−7.62 h) or cutting warehouse dwell time by an hour (−1.01 h) — each evaluated
+holding every other attribute of this specific order constant. This turns the model into a
+decision tool: operations can compare the cost of each lever against its hour payoff.
 
 ---
 
