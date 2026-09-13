@@ -204,7 +204,86 @@ demonstration of how much a handful of influential observations can distort OLS.
 
 ---
 
-## 6. Key business takeaways (from the regression coefficients)
+## 6. Essential plots — dataset and model diagnostics
+
+The figures below are the actual diagnostic output from `model_training.ipynb` (Parts A–C),
+generated on `data_cleaned.csv` / the fitted pipeline, referenced by the Part A table above.
+
+**1. Target distribution and boxplot**
+![Target distribution](plots/eda_01_target_distribution.png)
+`Delivery_Time_Hours` is right-skewed, piling up between 10–25 hours with a long tail out
+past 100 hours. The boxplot isolates the handful of extreme cases (66–116 h) later confirmed
+as the six unexplainable exception orders removed in Part A.
+
+**2. Delivery time by product category and shipping mode**
+![Category and shipping mode](plots/eda_02_delivery_by_category_mode.png)
+Median delivery time barely moves across product categories (Groceries fastest, Electronics
+slowest), but shipping mode separates the data cleanly — Same-Day clusters under 20 hours
+while Standard stretches past 40, confirming service tier as a strong categorical driver.
+
+**3. Scatter plots of each numeric predictor vs delivery time**
+![Predictor scatter plots](plots/eda_03_scatter_correlations.png)
+`Warehouse_Distance_Km` shows by far the strongest linear relationship (r = +0.69), while
+`Order_Value`, `Package_Weight_Kg` and `Items_in_Order` show almost no raw correlation —
+consistent with their small coefficients in the final model.
+
+**4. Partial-residual plots (linearity check)**
+![Partial residual plots](plots/eda_04_partial_residuals_linearity.png)
+The red LOWESS curve tracks the dashed fitted linear component closely for every continuous
+predictor, with no curvature — the linearity assumption holds and no transformation
+(log, polynomial) was needed for any feature.
+
+**5. Correlation matrix among numerical predictors**
+![Predictor correlation matrix](plots/eda_05_predictor_correlation_matrix.png)
+The highest pairwise correlation is +0.34 (Courier_Load_Index ↔ Traffic_Index); everything
+else sits below +0.32. This low multicollinearity is what later produces VIF values of
+roughly 1.0–1.25 across all predictors.
+
+**6. Residual order and lag-1 scatter (independence check)**
+![Residual independence](plots/eda_06_residual_order_independence.png)
+Residuals in row order sit flat around zero with only two sharp spikes (the influential
+exception cases); the lag-1 scatter shows no autocorrelation pattern, supporting the
+Durbin-Watson result of 2.05 — errors are independent.
+
+**7. Residuals vs fitted and scale-location (heteroscedasticity check)**
+![Heteroscedasticity check](plots/eda_07_residuals_vs_fitted_heteroscedasticity.png)
+The scale-location panel's red trend line rises gently as fitted values increase, showing
+error spread growing with journey length — the visual confirmation of the Breusch-Pagan
+violation, which the app addresses by widening its promise window on longer lanes.
+
+**8. Residual histogram and Q-Q plot before treatment**
+![Residual normality before treatment](plots/eda_08_residual_normality_before_treatment.png)
+Before removing influential points, residuals are heavily right-skewed with the Q-Q plot
+bending sharply away from the diagonal at the top — a handful of extreme residuals (10–17)
+distort normality far more than the model's typical error.
+
+**9. Cook's distance, influence plot, and target far-outlier fence**
+![Influence and outlier diagnostics](plots/eda_09_cooks_distance_influence.png)
+Six observations spike well above the 4/n Cook's distance threshold and sit far outside the
+Q3 + 3×IQR fence on the target — these are the exact six exception cases dropped in Part A,
+isolated here from the otherwise well-behaved high-leverage long-haul orders that were kept.
+
+**10. Residual diagnostics after treatment**
+![Residual diagnostics after treatment](plots/eda_10_residual_diagnostics_after_treatment.png)
+After removing the six exception cases, residuals scatter evenly around zero (BP p still
+< 0.001, confirming heteroscedasticity remains) but the Q-Q plot now hugs the diagonal and
+the histogram is symmetric — Jarque-Bera p ≈ 0.869 confirms residual normality is restored.
+
+**11. Standardised driver importance**
+![Standardised driver importance](plots/eda_11_standardised_driver_importance.png)
+Ranking every driver by its per-1-SD effect makes `Warehouse_Distance_Km` and
+`Shipping_Mode_Standard` the two largest levers on delivery time, with `Shipping_Mode_Same_Day`
+the single largest time-saving effect — the same ranking underlying the app's driver chart.
+
+**12. Actual vs predicted and test-residual distribution**
+![Actual vs predicted, test set](plots/eda_12_actual_vs_predicted_test.png)
+On the 239-order held-out test set, predicted hours track actual hours tightly around the
+45° line (R² = 0.968); the residual histogram is centred near zero (mean −0.045 h,
+sd 1.523 h) with no pattern left versus predicted values.
+
+---
+
+## 7. Key business takeaways (from the regression coefficients)
 
 Standardised coefficients (hours per 1 standard deviation) answer *"which lever is worth
 pulling?"*; per-unit coefficients answer *"what does one more unit cost me?"*
@@ -253,7 +332,7 @@ an explicit delivery cost for under-staffing a route on a peak day.
 
 ---
 
-## 7. Limitations
+## 8. Limitations
 
 1. **The model predicts normal-course delivery.** The six exception cases removed in Part A
    are real events driven by variables the dataset does not contain (customs holds, failed
@@ -275,7 +354,7 @@ an explicit delivery cost for under-staffing a route on a peak day.
 
 ---
 
-## 8. Assignment deliverables checklist
+## 9. Assignment deliverables checklist
 
 - [x] Generated dataset — `data.csv` (1,215 rows, exact specification column names)
 - [x] Notebook with assumption checks and corrections — `model_training.ipynb` (Parts A–C)
